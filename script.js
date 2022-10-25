@@ -1,3 +1,9 @@
+//***** Missing functionality: program does not calculate and store the users score. Nor can the quiz be retaken without refreshing the webpage.
+//***** Still need to learn the proper thought-process behind where to start/ how to iterate in a cleaner, more efficient manner; my code is incredibly messy and I find myself jumping back and forth between functions and parts of the file to add in and take away lines of code.
+//***** However, I am understanding very well the syntax and methodology behind the code.
+
+
+//Declaring and assigning most elements to variables using querySelector.
 var questionEl = document.querySelector("h1");
 var introEl = document.querySelector("h2");
 var answerA = document.querySelector(".a")
@@ -8,7 +14,7 @@ var startEl = document.querySelector(".button");
 var timerEl = document.querySelector(".timer");
 var highScoresEl = document.querySelector(".scores");
 var correctDiv = document.querySelector("rightOrWrong");
-
+//This was to be used later on to retrieve the user's score from local storage
 var score = localStorage.getItem("score");
 //Declaring the quizBank array that holds the objects that store the questions and answers, as well as the correct answer. Each object has 6 key:value pairs.
 const quizBank =[
@@ -94,7 +100,21 @@ const quizBank =[
   },
 ]
 
-
+//Function that is supposed to be used on startup, however I am using it to TRY to revert back to the original state of the webpage
+function onStart(){
+  //Hides the timer
+timerEl.style.display = "none";
+//Sets the display style property to none on the four answer elements, hides them until the startEl.addEventListener() method is called.
+answerA.style.display = "none";
+answerB.style.display = "none";
+answerC.style.display = "none";
+answerD.style.display = "none";
+highScoresEl.style.visibility = "initial";
+questionEl.textContent = "Welcome to the Javascript fundementals quiz.";
+introEl.textContent = "To start the quiz click on the 'Start Quiz' button. You will have 60 seconds to complete 10 questions. Good luck!";
+startEl.style.display = "initial";
+goBackEl.style.display ="none";
+};
 
 //Hides the timer
 timerEl.style.display = "none";
@@ -104,10 +124,10 @@ answerB.style.display = "none";
 answerC.style.display = "none";
 answerD.style.display = "none";
 
-//Declaring a function that takes the value of what getRandomNumber returned and stores it into a local variable ranNum. 
-//Then takes the text content of the questionEl and replaces it with the corresponding [ranNum] member of questionBank array.
+//Declaring a function that takes the value of what the Math.random() method returns and stores it into a local variable rnd. 
+//Then takes the text content of the questionEl and replaces it with the corresponding [rnd] member of questionBank array.
 //Then takes the text content of each list item and replaces it with the corresponding answerBank object key pair value.
-
+// I also had to include a splice() method on quizbank in order to keep the random selection from repeating, this causes big problem later on, as the array is now indexless when the user tries to re-run the quiz.
 function randomQuestion(){
   var rnd = Math.floor(Math.random()* quizBank.length);
 
@@ -117,11 +137,8 @@ answerB.textContent = quizBank[rnd].b;
 answerC.textContent = quizBank[rnd].c;
 answerD.textContent = quizBank[rnd].d;
 quizBank.splice(rnd,1);
-
-
-
-
-
+//If statement that says if the length of the quizBank array is equal in type and in value to 0, then run the proceeding code.
+//Hides most of the elements, and replaces the question element text with "Quiz complete", and shows the users score.
 if(quizBank.length ===0){
   questionEl.textContent = "Quiz Complete!";
   introEl.style.display = "initial";
@@ -131,8 +148,7 @@ if(quizBank.length ===0){
   answerB.style.display = "none";
   answerC.style.display = "none";
   answerD.style.display = "none";
-  highScoresEl.style.visibility = "initial";
-}
+};
  
 };
 
@@ -145,11 +161,29 @@ function timesUp(){
     answerB.style.display = "none";
     answerC.style.display = "none";
     answerD.style.display = "none";
-    introEl.style.display = "initial";
+    introEl.style.visibility = "initial";
     introEl.textContent = "Your score: "+ secondsLeft;
 
 
 };
+//Declaring variable that stores the div element with class "goBack" using querySelector() method.
+var goBackEl = document.querySelector(".goBack");
+  //Creating a new button element and storing it into a variable called goBackButton. To be used later for modifying the text content of that button element.
+  var goBackButton = document.createElement("button");
+//Declaring a function to add a go back button at the end of the quiz and or when the timer runs out.
+function createGoBack(){
+  //sets the text content of the button
+  goBackButton.textContent = "Go Back";
+  //sets the id attribute of the button to 'goBack'
+  goBackButton.setAttribute("id", "goBack");
+  //appends the goBackButton to the element captured in goBackEl
+  goBackEl.append(goBackButton);
+  //reverts the display of the goBackEl to it's initial state (not hidden)
+  goBackEl.style.display ="initial";
+};
+
+
+//Variable to store seconds in the timer and compute score.
 var secondsLeft;
 startEl.addEventListener("click", function (){
         //Sets the display state to none, hides the button element.
@@ -175,32 +209,41 @@ startEl.addEventListener("click", function (){
           timerEl.textContent = "Timer: " + secondsLeft;
           //If the value of secondsLeft reaches 0 then run the sendMessage() function, which replaces the text content of timerEl to "Times Up!".
           if(secondsLeft === 0) { 
+            //If the time runs out, the interval is stopped and the timesUp() function is called as well as the createGoBack() function.
             clearInterval(timerInterval);
             timesUp();
+            createGoBack(); 
           }
           if(quizBank.length===0){
+            //" " excluding timesUp() function.
             clearInterval(timerInterval);
+            createGoBack();
           }
         }, 1000);
+        //Runs the randomQuestion() function once the start quiz button is clicked.
         randomQuestion();
         
 });
 //Event handler that allows event bubbling only on the li elements, runs the randomQuestion() function when an li item is clicked.
 document.body.addEventListener("click", function(event){
-  
+  //Used this if condition to exclude anything else but the answer elements as the event trigger.
   if(event.target !== answerA && event.target !== answerB && event.target !== answerC && event.target !== answerD){
     return;
   };
-
-// correctDiv.append(h3);
+  //Runs the randomQuestion() function whenever any answer is clicked.
   randomQuestion();
 });
+//Event listener for the high scores element, displays high scores, and creates a Go Back button.
 highScoresEl.addEventListener("click", function(){
   questionEl.textContent = "High Scores:";
   introEl.textContent = "Placeholder";
+  highScoresEl.style.display = "none";
+  createGoBack();
 });
-
-
-// if (selectedAnswer!=){
-  
-// }
+//Event listener for the Go Back button, runs the onStart() function when clicked.
+document.body.addEventListener('click',function(e){
+  if(e.target && e.target.id== 'goBack'){
+    //Calls the onStart() function to TRY and revert webpage back to original state.
+    onStart();
+   }
+});
